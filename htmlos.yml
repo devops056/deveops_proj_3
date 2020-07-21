@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: htmlos-pvc-claim
+  labels: 
+    name: htmlospvcclaim
+spec: 
+  accessModes:
+    - ReadWriteOnce
+  resources: 
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: htmlos-deploy
+spec:
+  replicas: 1
+  selector:
+    matchlabels:
+      env: testing
+  template:
+    metadata:
+      name: htmlos-pod
+      labels:
+        env: testing
+    spec:
+      containers:
+      - name: htmlos-con
+        image: vimal13/apache-webserver-php:latest
+        volumeMounts:
+        - name: phpos-persistent-storage
+          mountPath: /var/www/html
+      volumes: 
+      - name: htmlos-persistent-storage
+        persistentVolumeClaim:
+            claimName: htmlos-pvc-claim

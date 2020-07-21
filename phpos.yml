@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: phpos-pvc-claim
+  labels: 
+    name: phpospvcclaim
+spec: 
+  accessModes:
+    - ReadWriteOnce
+  resources: 
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpos-deploy
+spec:
+  replicas: 1
+  selector:
+    matchlabels:
+      env: testing
+  template:
+    metadata:
+      name: phpos-pod
+      labels:
+        env: testing
+    spec:
+      containers:
+      - name: phpos-con
+        image: krushnakant241/mywebos:v1
+        volumeMounts:
+        - name: phpos-persistent-storage
+          mountPath: /var/www/html
+      volumes: 
+      - name: phpos-persistent-storage
+        persistentVolumeClaim:
+            claimName: phpos-pvc-claim
