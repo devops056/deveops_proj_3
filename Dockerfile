@@ -13,4 +13,4 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.18.0/b
 RUN chmod +x ./kubectl
 RUN mv ./kubectl /usr/bin/kubectl
 RUN kubectl version --client
-CMD mkdir /root/.kube
+RUN mkdir /root/.kube
