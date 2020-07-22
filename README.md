@@ -24,7 +24,7 @@ docker build -t myjenkins:v1 . (here"." means we are running this command from p
 
 #### Step - 2 -Run that Image using below command, refer these snaps - (Jenkins docker run).
 ```
-docker run -it -P -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker --name myjenkins1 myjenkins:v1
+docker run -it -P -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -v /root/.kube:/root/.kube --name myjenkins1 myjenkins:v1
 ```
 (Note: we have attached docker socket and configuration file of base os to perfrom any commnad from jenkins container, -P is for exposing 8080 port)
 
@@ -59,51 +59,34 @@ sudo cp -rvf * /home/code/
 ```
 if sudo ls /home/code/ | grep .php
 then
-	if sudo docker ps | grep phpos
+	if sudo kubectl get deployment | grep phpos-deploy
 	then
-		echo "PHPOS is already running"
-		sudo docker exec phpos rm -f /var/www/html/*.php
-		sudo docker cp /home/code/*.php phpos:/var/www/html/
-	else
-		if sudo docker ps -a | grep phpos
-		then
-			echo "PHPOS is stopped"
-			sudo docker start phpos
-			sudo docker exec phpos rm -f /var/www/html/*.php
-			sudo docker cp /home/code/*.php phpos:/var/www/html
-		else
-			sudo docker run -dit --name phpos -p 80:80 vimal13/apache-webserver-php
-			sudo docker exec phpos rm -f /var/www/html/*.php
-			sudo docker cp /home/code/*.php phpos:/var/www/html/
-		fi
-	fi
+		echo "Deployment is already running"
+		sudo kubectl apply -f phpos.yml
+		sudo kubectl cp /home/code/*.php phpos-pod:/var/www/html/
+    else
+		echo "No Deployment is running"
+        sudo kubectl create -f phpos.yml
+        sudo kubectl cp /home/code/*.php phpos-pod:/var/www/html/
+    fi
 else
-	echo "No PHP code available"
+	echo "No PHP code is available"
 fi
-```
-```
+
 if sudo ls /home/code/ | grep .html
 then
-	if sudo docker ps | grep htmlos
+	if sudo kubectl get deployment | grep html-deploy
 	then
-		echo "HTMLOS is already running"
-		sudo docker exec htmlos rm -f /var/www/html/*.html
-		sudo docker cp /home/code/*.html htmlos:/var/www/html/
+		echo "Deployment is already running"
+		sudo kubectl apply -f htmlos.yml
+		sudo kubectl cp /home/code/*.html htmlos-pod:/var/www/html/
 	else
-		if sudo docker ps -a | grep htmlos
-		then
-			echo "HTMLOS is stopped"
-			sudo docker start htmlos
-			sudo docker exec htmlos rm -f /var/www/html/*.html
-			sudo docker cp /home/code/*.html htmlos:/var/www/html/
-		else
-			sudo docker run -dit --name htmlos -p 8081:80 krushnakant241/mywebos:v1
-			sudo docker exec htmlos rm -f /var/www/html/*.html
-			sudo docker cp /home/code/*.html htmlos:/var/www/html/
-		fi
-	fi
+		echo "No Deployment is running"
+        sudo kubectl create -f htmlos.yml
+        sudo kubectl cp /home/code/*.html htmlos-pod:/var/www/html/
+    fi
 else
-	echo "No HTML code available"
+	echo "No HTML code is available"
 fi
 ```
 
@@ -112,7 +95,7 @@ fi
 ```
 if sudo ls /home/code/ | grep index.php
 then
-	export status=$(curl -o /dev/null -s -w "%{http_code}" http://192.168.99.101/index.php)
+	export status=$(curl -o /dev/null -s -w "%{http_code}" http://192.168.99.101:50000/index.php)
 	if [ $status -eq 200 ]
 	then
 		exit 0
@@ -123,7 +106,7 @@ then
 else
 	if sudo ls /home/code/ | grep index.html
 	then
-		export status1=$(curl -o /dev/null -s -w "%{http_code}" http://192.168.99.101:8081/index.html)
+		export status1=$(curl -o /dev/null -s -w "%{http_code}" http://192.168.99.101:51000/index.html)
 		if [ $status1 -eq 200 ]
 		then
 			exit 0
