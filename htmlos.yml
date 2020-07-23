@@ -10,7 +10,7 @@ spec:
     matchLabels:
       app: htmlos
   strategy:
-     type: Recreate    
+    type: Recreate    
   template:
     metadata:
       labels:
