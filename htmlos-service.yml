@@ -7,7 +7,7 @@ metadata:
 spec:
   ports:
     - port: 80
-      nodePort: 40002
+      nodePort: 30002
   type: NodePort
   selector:
     app: htmlos
