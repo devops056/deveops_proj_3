@@ -24,7 +24,7 @@ docker build -t myjenkins:v1 . (here"." means we are running this command from p
 
 #### Step - 2 -Run that Image using below command, refer these snaps - (Jenkins docker run).
 ```
-docker run -it -P -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -v /root/.kube:/root/.kube --name myjenkins1 myjenkins:v1
+docker run -it -P -v /root/.kube:/root/.kube --name myjenkins1 myjenkins:v1
 ```
 (Note: we have attached docker socket and configuration file of base os to perfrom any commnad from jenkins container, -P is for exposing 8080 port)
 
@@ -39,7 +39,7 @@ docker ps
 -Change the admin password then create below jobs
 
 #### Step - 4 - Job-1 -Pull the code from GitHub when developers pushed to Github using poll SCM, please find the below code, refer these snaps - (Github plugin installation, Job-1-snap-1, Job-1-snap-2).
--First of all, install GitHub plugin in jenkins from manage jenkins.
+-First of all, install GitHub and build pipeline plugins from manage jenkins.
 
 -pull the code from GitHub and run below command to copy those files from jenkins workspace to that folder
 ```
@@ -57,33 +57,72 @@ sudo cp -rvf * /home/code/
 #### Step - 5 - Job-2 -this job run if job1 build successfully -it will check code, run respective container(PHP or HTML), please find the below code, refer these snaps - (Job-2-snap-1, Job-2-snap-2, Github php code, PHP code running, Github html code, HTML code running).
 
 ```
+#PVC checking
+if sudo kubectl get pvc | grep phpos-pvc-claim
+then
+	echo "PHPOS pvc already claimed"
+else
+	sudo kubectl create -f /home/code/phpos-pvc-claim.yml
+fi
+if sudo kubectl get pvc | grep htmlos-pvc-claim
+then
+	echo "HTMLOS pvc already claimed"
+else
+	sudo kubectl create -f /home/code/htmlos-pvc-claim.yml
+fi
+
+
+#Service checking
+if sudo kubectl get svc | grep phpos
+then
+	echo "PHPOS-Service is already running"
+else
+	sudo kubectl create -f /home/code/phpos-service.yml
+fi
+if sudo kubectl get svc | grep htmlos
+then
+	echo "HTMLOS-Service is already running"
+else
+	sudo kubectl create -f /home/code/htmlos-service.yml
+fi
+```
+```
+#PHP code checking
 if sudo ls /home/code/ | grep .php
 then
-	if sudo kubectl get deployment | grep phpos-deploy
+	if sudo kubectl get deployment | grep phpos
 	then
-		echo "Deployment is already running"
-		sudo kubectl apply -f phpos.yml
-		sudo kubectl cp /home/code/*.php phpos-pod:/var/www/html/
+		echo "PHPOS Deployment is already running"
+		sudo kubectl apply -f /home/code/phpos.yml
+		phppodname=$(sudo kubectl get pods | grep phpos | awk '{print $1}')
+		sudo kubectl cp /home/code/*.php $phppodname:/var/www/html/
     else
 		echo "No Deployment is running"
-        sudo kubectl create -f phpos.yml
-        sudo kubectl cp /home/code/*.php phpos-pod:/var/www/html/
+        sudo kubectl create -f /home/code/phpos.yml
+		phppodname=$(sudo kubectl get pods | grep phpos | awk '{print $1}')
+        sleep 10
+        sudo kubectl cp /home/code/*.php $phppodname:/var/www/html/
     fi
 else
 	echo "No PHP code is available"
 fi
 
+
+#HTML code checking
 if sudo ls /home/code/ | grep .html
 then
-	if sudo kubectl get deployment | grep html-deploy
+	if sudo kubectl get deployment | grep htmlos
 	then
 		echo "Deployment is already running"
-		sudo kubectl apply -f htmlos.yml
-		sudo kubectl cp /home/code/*.html htmlos-pod:/var/www/html/
-	else
+		sudo kubectl apply -f /home/code/htmlos.yml
+		htmlpodname=$(sudo kubectl get pods | grep htmlos | awk '{print $1}')
+		sudo kubectl cp /home/code/*.html $htmlpodname:/var/www/html/
+    else
 		echo "No Deployment is running"
-        sudo kubectl create -f htmlos.yml
-        sudo kubectl cp /home/code/*.html htmlos-pod:/var/www/html/
+        sudo kubectl create -f /home/code/htmlos.yml
+        htmlpodname=$(sudo kubectl get pods | grep htmlos | awk '{print $1}')
+        sleep 10
+		sudo kubectl cp /home/code/*.html $htmlpodname:/var/www/html/
     fi
 else
 	echo "No HTML code is available"
@@ -95,7 +134,7 @@ fi
 ```
 if sudo ls /home/code/ | grep index.php
 then
-	export status=$(curl -o /dev/null -s -w "%{http_code}" http://192.168.99.101:50000/index.php)
+	export status=$(curl -o /dev/null -s -w "%{http_code}" http://192.168.99.100:30001/index.php)
 	if [ $status -eq 200 ]
 	then
 		exit 0
@@ -106,7 +145,7 @@ then
 else
 	if sudo ls /home/code/ | grep index.html
 	then
-		export status1=$(curl -o /dev/null -s -w "%{http_code}" http://192.168.99.101:51000/index.html)
+		export status1=$(curl -o /dev/null -s -w "%{http_code}" http://192.168.99.100:30002/index.html)
 		if [ $status1 -eq 200 ]
 		then
 			exit 0
