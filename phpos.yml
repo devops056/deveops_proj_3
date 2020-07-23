@@ -18,6 +18,7 @@ spec:
         image: vimal13/apache-webserver-php:latest
         ports:
         - containerPort: 80
+          NodePort: 30000
         volumeMounts:
         - name: phpos-persistent-storage
           mountPath: /var/www/html

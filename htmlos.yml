@@ -18,6 +18,7 @@ spec:
         image: krushnakant241/mywebos:v1
         ports:
         - containerPort: 80
+          NodePort: 31000
         volumeMounts:
         - name: phpos-persistent-storage
           mountPath: /var/www/html
