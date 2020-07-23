@@ -1,28 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: htmlos-deploy
+  name: htmlos
+  labels:
+    app: htmlos
 spec:
   replicas: 1
   selector:
     matchLabels:
-      env: testing
+      app: htmlos
+  strategy:
+     type: Recreate    
   template:
     metadata:
-      name: htmlos-pod
       labels:
-        env: testing
+        app: htmlos
     spec:
       containers:
-      - name: htmlos-con
+      - name: htmlos
         image: krushnakant241/mywebos:v1
         ports:
         - containerPort: 80
-          NodePort: 31000
+          name: htmlos
         volumeMounts:
-        - name: phpos-persistent-storage
+        - name: htmlos-persistent-storage
           mountPath: /var/www/html
       volumes: 
       - name: htmlos-persistent-storage
         persistentVolumeClaim:
-            claimName: htmlos-pvc-claim
+          claimName: htmlos-pvc-claim

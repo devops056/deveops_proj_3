@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: htmlos-service
+  name: htmlos
   labels:
-    service: html
+    app: htmlos
 spec:
   ports:
     - port: 80
       nodePort: 40002
   type: NodePort
   selector:
-    service: html
+    app: htmlos
