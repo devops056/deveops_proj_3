@@ -16,7 +16,7 @@ Perform below task on top of Kubernetes where we use Kubernetes resources like P
 
 ## Let's see step by step how to achieve this:
 
-#### Step - 1 -Creat Dockerfile and Build Image, please find the below command, refer these snaps - (jenkins image creation).
+#### Step - 1 -Create Dockerfile and Build Image, please find the below command, refer these snaps - (jenkins image creation).
 created Dockerfile as per uploded file and builded image using below command and also run it.
 ```
 docker build -t myjenkins:v1 . (here"." means we are running this command from present directory of Dockerfile)
